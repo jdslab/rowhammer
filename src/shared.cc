@@ -59,9 +59,9 @@ void * allocate_pages(uint64_t memory_size) {
         printf("memory allocation failed: %s\n", strerror(errno));
     }
 
-    for (uint64_t i = 0; i < memory_size; i += PAGE_SIZE) {
+    for (uint64_t i = 0; i < memory_size; i += 16) {
         uint64_t * addr = (uint64_t *) ((uint8_t *) (memory_block) + i);
-        *addr = i;
+        *addr = 0x55;
     } 
 
     return memory_block;  
@@ -234,6 +234,18 @@ uint32_t count_flips(uint8_t* victim, uint8_t expected) {
         }
     }
     return number_of_bitflips;
+}
+
+uint32_t count_total_flips(void* allocated_mem, uint64_t mem_size) {
+    uint32_t num_flips = 0;
+    for (uint64_t i = 0; i < mem_size; i += 16) {
+        uint64_t * addr = (uint64_t *) ((uint8_t *) (allocated_mem) + i);
+        uint64_t xor_result = *addr ^ 0x55;
+        if (xor_result != 0) {
+            num_flips++;
+        }
+    }
+    return num_flips;
 }
 
 void print_diff(uint8_t* victim, uint8_t expected) {

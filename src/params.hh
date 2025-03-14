@@ -4,8 +4,8 @@
 #define RED   "\x1B[31m"
 #define RESET "\x1B[0m"
 
-// Size of allocated buffer = 2GB
-#define BUFFER_SIZE 2147483648UL
+// Size of allocated buffer = 40GB
+#define BUFFER_SIZE 2147483648UL//42949672960ULL
 
 // Size of hugepages in system
 #define PAGE_SIZE (1 << 12)

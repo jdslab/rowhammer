@@ -7,9 +7,9 @@ int main(int argc, char **argv) {
     allocated_mem = allocate_pages(BUFFER_SIZE);
     uint64_t* bank_lat_histogram = (uint64_t*) calloc((NUM_LAT_BUCKETS+1), sizeof(uint64_t));
     
-    const long int num_iterations = BUFFER_SIZE / ROW_SIZE;
+    const long long int num_iterations = BUFFER_SIZE / ROW_SIZE;
     char *base = (char *)allocated_mem;
-    for (int i = 1; i < num_iterations; i++) {
+    for (long long int i = 1; i < num_iterations; i++) {
         uint64_t time = 0;
         for (int j = 0; j < SAMPLES; j++) {
             time += measure_bank_latency2((uint64_t)base, (uint64_t)(base + i * ROW_SIZE));
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     }
 
     //Print the Histogram
-    printf("Total Number of addresses accessesed: %ld\n", num_iterations);
+    printf("Total Number of addresses accessesed: %lld\n", num_iterations);
   
     puts("-------------------------------------------------------");
     printf("Latency(cycles)\t\tAddress-Count \n");

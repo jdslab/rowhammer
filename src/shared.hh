@@ -46,6 +46,7 @@ uint64_t get_dram_address(uint64_t row, int bank, uint64_t col);
 bool get_addresses_to_hammer(uint64_t victim_phys_addr, uint64_t *attacker_1, uint64_t *attacker_2, int row_diff);
 void print_result(uint64_t victim, uint64_t attacker_1, uint64_t attacker_2, uint32_t num_bit_flips);
 uint32_t count_flips(uint8_t* victim, uint8_t expected);
+uint32_t count_total_flips(void* allocated_mem, uint64_t mem_size);
 void print_diff(uint8_t* victim, uint8_t expected);
 void deallocate_pages(void *memory_block, uint64_t memory_size);
 
